@@ -13,4 +13,8 @@ module com.example.proyectofinaltap {
 
     opens com.example.proyectofinaltap to javafx.fxml;
     exports com.example.proyectofinaltap;
+
+    // Añade esto para el paquete 'app' que contiene MainApp
+    opens app to javafx.fxml, javafx.graphics;
+    exports app;
 }
