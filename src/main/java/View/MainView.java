@@ -1,9 +1,11 @@
 package View;
 
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import View.DiccionarioAttackView; // importa tu nueva clase
 
 public class MainView {
 
@@ -11,12 +13,17 @@ public class MainView {
         Stage stage = new Stage();
         stage.setTitle("Ventana Principal");
 
-        // Crear el contenido de la ventana principal
-        StackPane root = new StackPane();
-        root.getChildren().add(new Label("Bienvenido al sistema"));
+        Label label = new Label("Bienvenido al sistema");
+        Button btnDiccionario = new Button("Simular Ataque de Diccionario");
 
-        // Configurar la escena y mostrar la ventana
-        Scene scene = new Scene(root, 300, 250);
+        btnDiccionario.setOnAction(e -> {
+            new DiccionarioAttackView().show();
+        });
+
+        VBox root = new VBox(20, label, btnDiccionario);
+        root.setPrefSize(300, 250);
+
+        Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
