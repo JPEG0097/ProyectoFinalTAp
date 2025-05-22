@@ -14,4 +14,5 @@ module com.example.proyectofinaltap {
 
     opens com.example.proyectofinaltap to javafx.fxml;
     exports com.example.proyectofinaltap;
+    exports View;
 }
