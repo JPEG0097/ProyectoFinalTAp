@@ -1,28 +1,44 @@
 package controller;
 
 import model.UsuarioDAO;
-import View.MainView; // Asegúrate de importar la clase de la vista principal
+import View.MainView;
+import javafx.stage.Stage;
 
 public class LoginController {
+    private Stage loginStage; // Referencia al stage de login
+
+    public LoginController(Stage loginStage) {
+        this.loginStage = loginStage;
+    }
 
     public void validarLogin(String username, String password) {
-        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        if (username.isEmpty() || password.isEmpty()) {
+            showAlert("Error", "Debe completar todos los campos");
+            return;
+        }
 
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
         boolean valido = usuarioDAO.validarUsuario(username, password);
 
         if (valido) {
-            System.out.println("Login exitoso");
-
-            // Aquí abres la ventana principal después del login exitoso
-            MainView mainView = new MainView();
-            mainView.show();  // Este método muestra la ventana principal
-
-            // Cerrar la ventana de login (opcional)
-            // loginStage.close();
+            showMainView();
+            loginStage.close(); // Cierra la ventana de login
         } else {
-            System.out.println("Usuario o contraseña incorrectos");
-
-            // Aquí puedes agregar un mensaje en la vista para informar al usuario que el login ha fallado
+            showAlert("Error", "Usuario o contraseña incorrectos");
         }
+    }
+
+    private void showMainView() {
+        MainView mainView = new MainView();
+        mainView.show();
+    }
+
+    private void showAlert(String title, String message) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
