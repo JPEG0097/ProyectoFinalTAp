@@ -5,106 +5,108 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import util.DiccionarioAttack;
-import java.io.File;
 
 public class DiccionarioAttackView {
     private TextArea resultadoArea;
     private TextField hashField;
-    private TextField diccionarioField;
+    private ProgressBar progressBar;
 
     public void show() {
         Stage stage = new Stage();
-        stage.setTitle("Simulación de Ataque de Diccionario");
+        stage.setTitle("Ataque de Diccionario");
 
+        // Contenedor principal
         VBox root = new VBox(15);
         root.setPadding(new Insets(20));
-        root.setStyle("-fx-background-color: #f9f9f9;");
+        root.setStyle("-fx-background-color: #f5f5f5;");
 
         // Panel de entrada
         GridPane inputGrid = new GridPane();
         inputGrid.setHgap(10);
         inputGrid.setVgap(10);
 
+        // Campo para el hash
         hashField = new TextField();
         hashField.setPromptText("Ingrese el hash SHA-1");
-        hashField.setPrefWidth(300);
+        hashField.setPrefWidth(400);
 
-        diccionarioField = new TextField();
-        diccionarioField.setEditable(false);
-
-        Button btnBuscar = new Button("Examinar");
-        btnBuscar.setOnAction(e -> seleccionarArchivo());
-
-        HBox fileBox = new HBox(10, diccionarioField, btnBuscar);
-        fileBox.setAlignment(Pos.CENTER_LEFT);
+        // Información del diccionario
+        Label infoLabel = new Label("Diccionario preconfigurado:\n" +
+                DiccionarioAttack.getRutaDiccionario());
+        infoLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #333;");
 
         inputGrid.add(new Label("Hash objetivo:"), 0, 0);
         inputGrid.add(hashField, 1, 0);
-        inputGrid.add(new Label("Archivo diccionario:"), 0, 1);
-        inputGrid.add(fileBox, 1, 1);
+        inputGrid.add(infoLabel, 0, 1, 2, 1);
 
         // Área de resultados
         resultadoArea = new TextArea();
         resultadoArea.setEditable(false);
         resultadoArea.setWrapText(true);
-        resultadoArea.setPrefHeight(200);
+        resultadoArea.setPrefHeight(250);
+        resultadoArea.setStyle("-fx-font-family: monospace;");
 
         // Barra de progreso
-        ProgressBar progressBar = new ProgressBar(0);
+        progressBar = new ProgressBar(0);
         progressBar.setPrefWidth(Double.MAX_VALUE);
 
-        // Botones
+        // Botón de inicio
         Button btnIniciar = new Button("Iniciar Ataque");
-        btnIniciar.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white;");
-        btnIniciar.setOnAction(e -> iniciarAtaque(progressBar));
+        btnIniciar.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnIniciar.setOnAction(e -> iniciarAtaque());
 
-        HBox buttonBox = new HBox(10, btnIniciar);
+        HBox buttonBox = new HBox(btnIniciar);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
 
+        // Ensamblar la interfaz
         root.getChildren().addAll(
-                new Label("Configuración del ataque:"),
+                new Label("CONFIGURACIÓN DEL ATAQUE"),
                 inputGrid,
                 new Separator(),
-                new Label("Resultados:"),
+                new Label("RESULTADOS"),
                 resultadoArea,
                 progressBar,
                 buttonBox
         );
 
-        Scene scene = new Scene(root, 600, 450);
+        // Configurar escena
+        Scene scene = new Scene(root, 650, 500);
         stage.setScene(scene);
         stage.show();
     }
 
-    private void seleccionarArchivo() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Seleccionar archivo de diccionario");
-        File file = fileChooser.showOpenDialog(null);
-        if (file != null) {
-            diccionarioField.setText(file.getAbsolutePath());
-        }
-    }
-
-    private void iniciarAtaque(ProgressBar progressBar) {
+    private void iniciarAtaque() {
         String hash = hashField.getText().trim();
-        String ruta = diccionarioField.getText().trim();
 
-        if (hash.isEmpty() || ruta.isEmpty()) {
-            mostrarError("Debe completar todos los campos");
+        // Validaciones
+        if (hash.isEmpty()) {
+            mostrarError("Debe ingresar un hash SHA-1");
             return;
         }
 
         if (!hash.matches("[a-fA-F0-9]{40}")) {
-            mostrarError("El formato del hash SHA-1 no es válido");
+            mostrarError("El hash debe tener exactamente 40 caracteres hexadecimales");
             return;
         }
 
-        // Ejecutar en un hilo separado para no bloquear la UI
+        if (!DiccionarioAttack.archivoExiste()) {
+            mostrarError("No se encuentra el archivo de diccionario\n" +
+                    "Verifique que existe en:\n" +
+                    DiccionarioAttack.getRutaDiccionario());
+            return;
+        }
+
+        // Limpiar resultados anteriores
+        resultadoArea.clear();
+        progressBar.setProgress(0);
+
+        // Ejecutar en segundo plano
         new Thread(() -> {
-            String resultado = DiccionarioAttack.ataqueDiccionario(hash, ruta);
+            String resultado = DiccionarioAttack.ataqueDiccionario(hash);
+
+            // Actualizar interfaz
             javafx.application.Platform.runLater(() -> {
                 resultadoArea.setText(resultado);
                 progressBar.setProgress(1.0);
